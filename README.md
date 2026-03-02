@@ -169,13 +169,10 @@ Example GitOps configuration is available in [`charts/pdb-operator/ci/`](charts/
 Full documentation is available at [pdboperator.io](https://pdboperator.io):
 
 - [Installation Guide](https://pdboperator.io/docs/getting-started/installation)
-- [API Reference](https://pdboperator.io/docs/api-reference/pdbpolicy)
-- [Design Document](https://pdboperator.io/docs/design)
 
 ## Getting Help
 
 - [GitHub Issues](https://github.com/pdb-operator/helm-pdb-operator/issues) for bug reports and feature requests
-- [GitHub Discussions](https://github.com/pdb-operator/helm-pdb-operator/discussions) for questions and general discussion
 
 ## Contributing
 
@@ -187,6 +184,6 @@ To report a security vulnerability, please see [SECURITY.md](SECURITY.md).
 
 ## License
 
-Copyright 2025 Nick Nikolakakis
+Copyright 2025 The PDB Operator Authors.
 
 Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.
