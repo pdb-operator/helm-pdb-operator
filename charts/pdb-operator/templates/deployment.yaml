@@ -1,0 +1,187 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "pdb-operator.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "pdb-operator.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  {{- with .Values.strategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "pdb-operator.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "pdb-operator.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "pdb-operator.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}
+      containers:
+        - name: pdb-operator
+          image: {{ include "pdb-operator.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /pdboperator
+          args:
+            - --health-probe-bind-address=:{{ .Values.healthProbe.port }}
+            {{- if .Values.leaderElection.enabled }}
+            - --leader-elect
+            {{- end }}
+            {{- if ne .Values.metrics.bindAddress "0" }}
+            - --metrics-bind-address={{ .Values.metrics.bindAddress }}
+            {{- end }}
+            {{- if not .Values.metrics.secure }}
+            - --metrics-secure=false
+            {{- end }}
+            {{- if .Values.webhooks.enabled }}
+            - --enable-webhook
+            - --webhook-cert-path=/tmp/k8s-webhook-server/serving-certs
+            {{- end }}
+            {{- if .Values.metrics.certPath }}
+            - --metrics-cert-path={{ .Values.metrics.certPath }}
+            {{- end }}
+            {{- if ne .Values.metrics.certName "tls.crt" }}
+            - --metrics-cert-name={{ .Values.metrics.certName }}
+            {{- end }}
+            {{- if ne .Values.metrics.certKey "tls.key" }}
+            - --metrics-cert-key={{ .Values.metrics.certKey }}
+            {{- end }}
+            {{- if .Values.http2.enabled }}
+            - --enable-http2
+            {{- end }}
+            {{- if gt (int .Values.controller.maxConcurrentReconciles) 5 }}
+            - --max-concurrent-reconciles={{ .Values.controller.maxConcurrentReconciles }}
+            {{- end }}
+            {{- if .Values.controller.watchNamespace }}
+            - --watch-namespace={{ .Values.controller.watchNamespace }}
+            {{- end }}
+            {{- if ne .Values.controller.syncPeriod "10h" }}
+            - --sync-period={{ .Values.controller.syncPeriod }}
+            {{- end }}
+            {{- if ne .Values.controller.logLevel "info" }}
+            - --log-level={{ .Values.controller.logLevel }}
+            {{- end }}
+            {{- if not .Values.tracing.enabled }}
+            - --enable-tracing=false
+            {{- end }}
+            {{- if ne (int .Values.cache.policyCacheSize) 100 }}
+            - --policy-cache-size={{ .Values.cache.policyCacheSize }}
+            {{- end }}
+            {{- if ne .Values.cache.policyCacheTTL "5m" }}
+            - --policy-cache-ttl={{ .Values.cache.policyCacheTTL }}
+            {{- end }}
+            {{- if ne .Values.cache.maintenanceWindowCacheTTL "1m" }}
+            - --maintenance-window-cache-ttl={{ .Values.cache.maintenanceWindowCacheTTL }}
+            {{- end }}
+            {{- if ne (int .Values.retry.maxAttempts) 5 }}
+            - --retry-max-attempts={{ .Values.retry.maxAttempts }}
+            {{- end }}
+            {{- if ne .Values.retry.initialDelay "100ms" }}
+            - --retry-initial-delay={{ .Values.retry.initialDelay }}
+            {{- end }}
+            {{- if ne .Values.retry.maxDelay "30s" }}
+            - --retry-max-delay={{ .Values.retry.maxDelay }}
+            {{- end }}
+            {{- if ne (float64 .Values.retry.backoffFactor) 2.0 }}
+            - --retry-backoff-factor={{ .Values.retry.backoffFactor }}
+            {{- end }}
+          {{- if .Values.webhooks.enabled }}
+          ports:
+            - name: webhook-server
+              containerPort: {{ .Values.webhooks.targetPort }}
+              protocol: TCP
+          {{- end }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.healthProbe.port }}
+            initialDelaySeconds: {{ .Values.healthProbe.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthProbe.liveness.periodSeconds }}
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: {{ .Values.healthProbe.port }}
+            initialDelaySeconds: {{ .Values.healthProbe.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthProbe.readiness.periodSeconds }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            {{- if .Values.tracing.endpoint }}
+            - name: OTLP_ENDPOINT
+              value: {{ .Values.tracing.endpoint | quote }}
+            {{- end }}
+            {{- if .Values.tracing.sampleRate }}
+            - name: TRACE_SAMPLE_RATE
+              value: {{ .Values.tracing.sampleRate | quote }}
+            {{- end }}
+            {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- if or .Values.webhooks.enabled .Values.extraVolumeMounts }}
+          volumeMounts:
+            {{- if .Values.webhooks.enabled }}
+            - name: webhook-cert
+              mountPath: /tmp/k8s-webhook-server/serving-certs
+              readOnly: true
+            {{- end }}
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- end }}
+      {{- if or .Values.webhooks.enabled .Values.extraVolumes }}
+      volumes:
+        {{- if .Values.webhooks.enabled }}
+        - name: webhook-cert
+          secret:
+            defaultMode: 420
+            secretName: {{ include "pdb-operator.webhookCertSecretName" . }}
+        {{- end }}
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

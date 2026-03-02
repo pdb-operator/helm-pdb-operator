@@ -1,0 +1,16 @@
+{{- if .Values.metrics.secure }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "pdb-operator.fullname" . }}-metrics-auth
+  labels:
+    {{- include "pdb-operator.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "pdb-operator.fullname" . }}-metrics-auth
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "pdb-operator.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}

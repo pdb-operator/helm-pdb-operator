@@ -1,0 +1,614 @@
+suite: Deployment
+templates:
+  - deployment.yaml
+release:
+  name: test
+  namespace: pdb-operator-system
+tests:
+  # -------------------------------------------------------------------------
+  # Basic rendering
+  # -------------------------------------------------------------------------
+  - it: should render a Deployment
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: test-pdb-operator
+      - equal:
+          path: metadata.namespace
+          value: pdb-operator-system
+
+  - it: should include standard labels
+    asserts:
+      - isSubset:
+          path: metadata.labels
+          content:
+            app.kubernetes.io/name: pdb-operator
+            app.kubernetes.io/instance: test
+            app.kubernetes.io/managed-by: Helm
+
+  - it: should include selector labels
+    asserts:
+      - isSubset:
+          path: spec.selector.matchLabels
+          content:
+            app.kubernetes.io/name: pdb-operator
+            app.kubernetes.io/instance: test
+            control-plane: test-pdb-operator
+
+  # -------------------------------------------------------------------------
+  # Strategy
+  # -------------------------------------------------------------------------
+  - it: should render deployment strategy
+    asserts:
+      - equal:
+          path: spec.strategy.type
+          value: RollingUpdate
+      - equal:
+          path: spec.strategy.rollingUpdate.maxUnavailable
+          value: 1
+      - equal:
+          path: spec.strategy.rollingUpdate.maxSurge
+          value: 0
+
+  # -------------------------------------------------------------------------
+  # Replicas / HPA interaction
+  # -------------------------------------------------------------------------
+  - it: should omit replicas when autoscaling is enabled
+    set:
+      autoscaling.enabled: true
+    asserts:
+      - isNull:
+          path: spec.replicas
+
+  - it: should set replicas when autoscaling is disabled
+    set:
+      autoscaling.enabled: false
+      replicaCount: 3
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  # -------------------------------------------------------------------------
+  # Container image
+  # -------------------------------------------------------------------------
+  - it: should use default image from appVersion
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: "ghcr.io/pdb-operator/pdb-operator:.*"
+
+  - it: should use custom image tag
+    set:
+      image.tag: v1.2.3
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "ghcr.io/pdb-operator/pdb-operator:v1.2.3"
+
+  - it: should use custom repository
+    set:
+      image.repository: my-registry.io/pdb-operator
+      image.tag: latest
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "my-registry.io/pdb-operator:latest"
+
+  # -------------------------------------------------------------------------
+  # CLI args: leader election
+  # -------------------------------------------------------------------------
+  - it: should include --leader-elect by default
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--leader-elect"
+
+  - it: should omit --leader-elect when disabled
+    set:
+      leaderElection.enabled: false
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: "--leader-elect"
+
+  # -------------------------------------------------------------------------
+  # CLI args: webhooks
+  # -------------------------------------------------------------------------
+  - it: should include --enable-webhook when webhooks enabled
+    set:
+      webhooks.enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--enable-webhook"
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--webhook-cert-path=/tmp/k8s-webhook-server/serving-certs"
+
+  - it: should not include --enable-webhook when webhooks disabled
+    set:
+      webhooks.enabled: false
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: "--enable-webhook"
+
+  # -------------------------------------------------------------------------
+  # CLI args: metrics
+  # -------------------------------------------------------------------------
+  - it: should include metrics bind address by default
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--metrics-bind-address=:8443"
+
+  - it: should omit metrics bind address when set to 0
+    set:
+      metrics.bindAddress: "0"
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: "--metrics-bind-address=0"
+
+  - it: should include --metrics-secure=false when not secure
+    set:
+      metrics.secure: false
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--metrics-secure=false"
+
+  - it: should not include --metrics-secure=false when secure
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: "--metrics-secure=false"
+
+  # -------------------------------------------------------------------------
+  # CLI args: optional flags
+  # -------------------------------------------------------------------------
+  - it: should include --max-concurrent-reconciles when > 5
+    set:
+      controller.maxConcurrentReconciles: 10
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--max-concurrent-reconciles=10"
+
+  - it: should omit --max-concurrent-reconciles at default value 5
+    set:
+      controller.maxConcurrentReconciles: 5
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: "--max-concurrent-reconciles=5"
+
+  - it: should include --enable-http2 when enabled
+    set:
+      http2.enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--enable-http2"
+
+  - it: should include --metrics-cert-path when set
+    set:
+      metrics.certPath: /certs
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--metrics-cert-path=/certs"
+
+  # -------------------------------------------------------------------------
+  # CLI args: PDB Operator-specific flags
+  # -------------------------------------------------------------------------
+  - it: should include --watch-namespace when set
+    set:
+      controller.watchNamespace: production
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--watch-namespace=production"
+
+  - it: should omit --watch-namespace when empty
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: "--watch-namespace="
+
+  - it: should include --sync-period when non-default
+    set:
+      controller.syncPeriod: "1h"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--sync-period=1h"
+
+  - it: should omit --sync-period at default value
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: "--sync-period=10h"
+
+  - it: should include --log-level when non-default
+    set:
+      controller.logLevel: debug
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--log-level=debug"
+
+  - it: should omit --log-level at default info
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: "--log-level=info"
+
+  - it: should include --enable-tracing=false when tracing disabled
+    set:
+      tracing.enabled: false
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--enable-tracing=false"
+
+  - it: should not include --enable-tracing=false by default (tracing enabled)
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: "--enable-tracing=false"
+
+  # -------------------------------------------------------------------------
+  # CLI args: cache flags
+  # -------------------------------------------------------------------------
+  - it: should include --policy-cache-size when non-default
+    set:
+      cache.policyCacheSize: 200
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--policy-cache-size=200"
+
+  - it: should omit --policy-cache-size at default 100
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: "--policy-cache-size=100"
+
+  - it: should include --policy-cache-ttl when non-default
+    set:
+      cache.policyCacheTTL: "10m"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--policy-cache-ttl=10m"
+
+  - it: should include --maintenance-window-cache-ttl when non-default
+    set:
+      cache.maintenanceWindowCacheTTL: "5m"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--maintenance-window-cache-ttl=5m"
+
+  # -------------------------------------------------------------------------
+  # CLI args: retry flags
+  # -------------------------------------------------------------------------
+  - it: should include --retry-max-attempts when non-default
+    set:
+      retry.maxAttempts: 10
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--retry-max-attempts=10"
+
+  - it: should include --retry-initial-delay when non-default
+    set:
+      retry.initialDelay: "200ms"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--retry-initial-delay=200ms"
+
+  - it: should include --retry-max-delay when non-default
+    set:
+      retry.maxDelay: "60s"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--retry-max-delay=60s"
+
+  - it: should include --retry-backoff-factor when non-default
+    set:
+      retry.backoffFactor: 3.0
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--retry-backoff-factor=3"
+
+  # -------------------------------------------------------------------------
+  # Environment variables
+  # -------------------------------------------------------------------------
+  - it: should always include POD_NAMESPACE env var
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+
+  - it: should include OTLP_ENDPOINT when tracing endpoint set
+    set:
+      tracing.endpoint: "otel-collector:4317"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OTLP_ENDPOINT
+            value: "otel-collector:4317"
+
+  - it: should include TRACE_SAMPLE_RATE when set
+    set:
+      tracing.sampleRate: "0.1"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TRACE_SAMPLE_RATE
+            value: "0.1"
+
+  - it: should render extra env vars
+    set:
+      extraEnv:
+        - name: LOG_FORMAT
+          value: json
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: LOG_FORMAT
+            value: json
+
+  # -------------------------------------------------------------------------
+  # Ports
+  # -------------------------------------------------------------------------
+  - it: should render webhook port when webhooks enabled
+    set:
+      webhooks.enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            name: webhook-server
+            containerPort: 9443
+            protocol: TCP
+
+  - it: should not render ports when webhooks disabled
+    set:
+      webhooks.enabled: false
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].ports
+
+  # -------------------------------------------------------------------------
+  # Volumes / VolumeMounts
+  # -------------------------------------------------------------------------
+  - it: should mount webhook cert volume when webhooks enabled
+    set:
+      webhooks.enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: webhook-cert
+            mountPath: /tmp/k8s-webhook-server/serving-certs
+            readOnly: true
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: webhook-cert
+            secret:
+              defaultMode: 420
+              secretName: test-pdb-operator-webhook-cert
+
+  - it: should not render volumes when webhooks disabled and no extras
+    set:
+      webhooks.enabled: false
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].volumeMounts
+      - notExists:
+          path: spec.template.spec.volumes
+
+  - it: should render extra volumes
+    set:
+      webhooks.enabled: false
+      extraVolumes:
+        - name: config
+          configMap:
+            name: my-config
+      extraVolumeMounts:
+        - name: config
+          mountPath: /etc/config
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: config
+            configMap:
+              name: my-config
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: config
+            mountPath: /etc/config
+
+  # -------------------------------------------------------------------------
+  # Health probes
+  # -------------------------------------------------------------------------
+  - it: should configure liveness probe
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /healthz
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.port
+          value: 8081
+
+  - it: should configure readiness probe
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /readyz
+
+  # -------------------------------------------------------------------------
+  # Security context
+  # -------------------------------------------------------------------------
+  - it: should set pod security context
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+
+  - it: should set container security context
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.allowPrivilegeEscalation
+          value: false
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem
+          value: true
+      - contains:
+          path: spec.template.spec.containers[0].securityContext.capabilities.drop
+          content: "ALL"
+
+  # -------------------------------------------------------------------------
+  # Resources
+  # -------------------------------------------------------------------------
+  - it: should set resource limits and requests
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: 500m
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 512Mi
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: 100m
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.memory
+          value: 256Mi
+
+  # -------------------------------------------------------------------------
+  # Service account
+  # -------------------------------------------------------------------------
+  - it: should use generated service account name
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: test-pdb-operator
+
+  - it: should use custom service account name
+    set:
+      serviceAccount.name: custom-sa
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: custom-sa
+
+  # -------------------------------------------------------------------------
+  # Scheduling
+  # -------------------------------------------------------------------------
+  - it: should set node selector
+    set:
+      nodeSelector:
+        kubernetes.io/os: linux
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
+            kubernetes.io/os: linux
+
+  - it: should set tolerations
+    set:
+      tolerations:
+        - key: dedicated
+          operator: Equal
+          value: operator
+          effect: NoSchedule
+    asserts:
+      - contains:
+          path: spec.template.spec.tolerations
+          content:
+            key: dedicated
+            operator: Equal
+            value: operator
+            effect: NoSchedule
+
+  - it: should set affinity
+    set:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+    asserts:
+      - isNotNull:
+          path: spec.template.spec.affinity.podAntiAffinity
+
+  - it: should set topology spread constraints
+    set:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: DoNotSchedule
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.topologySpreadConstraints
+          count: 1
+
+  - it: should set priority class name
+    set:
+      priorityClassName: system-cluster-critical
+    asserts:
+      - equal:
+          path: spec.template.spec.priorityClassName
+          value: system-cluster-critical
+
+  # -------------------------------------------------------------------------
+  # Annotations and labels
+  # -------------------------------------------------------------------------
+  - it: should render pod annotations
+    asserts:
+      - isSubset:
+          path: spec.template.metadata.annotations
+          content:
+            kubectl.kubernetes.io/default-container: pdb-operator
+
+  - it: should render custom pod labels
+    set:
+      podLabels:
+        custom-label: test-value
+    asserts:
+      - isSubset:
+          path: spec.template.metadata.labels
+          content:
+            custom-label: test-value
+
+  # -------------------------------------------------------------------------
+  # Image pull secrets
+  # -------------------------------------------------------------------------
+  - it: should set image pull secrets
+    set:
+      imagePullSecrets:
+        - name: registry-creds
+    asserts:
+      - contains:
+          path: spec.template.spec.imagePullSecrets
+          content:
+            name: registry-creds

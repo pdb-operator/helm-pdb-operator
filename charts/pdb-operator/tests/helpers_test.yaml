@@ -1,0 +1,63 @@
+suite: Template Helpers
+templates:
+  - deployment.yaml
+release:
+  name: test
+  namespace: pdb-operator-system
+tests:
+  # -------------------------------------------------------------------------
+  # Naming
+  # -------------------------------------------------------------------------
+  - it: should use release-chart naming by default
+    asserts:
+      - equal:
+          path: metadata.name
+          value: test-pdb-operator
+
+  - it: should use fullnameOverride
+    set:
+      fullnameOverride: my-operator
+    asserts:
+      - equal:
+          path: metadata.name
+          value: my-operator
+
+  - it: should use nameOverride
+    set:
+      nameOverride: custom
+    asserts:
+      - equal:
+          path: metadata.name
+          value: test-custom
+
+  - it: should use release name when it contains chart name
+    release:
+      name: pdb-operator
+    asserts:
+      - equal:
+          path: metadata.name
+          value: pdb-operator
+
+  # -------------------------------------------------------------------------
+  # Common labels
+  # -------------------------------------------------------------------------
+  - it: should include common labels when set
+    set:
+      commonLabels:
+        team: platform
+        env: staging
+    asserts:
+      - isSubset:
+          path: metadata.labels
+          content:
+            team: platform
+            env: staging
+
+  # -------------------------------------------------------------------------
+  # Chart label
+  # -------------------------------------------------------------------------
+  - it: should include chart label
+    asserts:
+      - matchRegex:
+          path: metadata.labels["helm.sh/chart"]
+          pattern: "pdb-operator-.*"

@@ -1,0 +1,72 @@
+{{- if .Values.crdRoles.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "pdb-operator.fullname" . }}-pdbpolicy-admin
+  labels:
+    {{- include "pdb-operator.labels" . | nindent 4 }}
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+rules:
+  - apiGroups:
+      - availability.pdboperator.io
+    resources:
+      - pdbpolicies
+    verbs:
+      - "*"
+  - apiGroups:
+      - availability.pdboperator.io
+    resources:
+      - pdbpolicies/status
+    verbs:
+      - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "pdb-operator.fullname" . }}-pdbpolicy-editor
+  labels:
+    {{- include "pdb-operator.labels" . | nindent 4 }}
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+rules:
+  - apiGroups:
+      - availability.pdboperator.io
+    resources:
+      - pdbpolicies
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - availability.pdboperator.io
+    resources:
+      - pdbpolicies/status
+    verbs:
+      - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "pdb-operator.fullname" . }}-pdbpolicy-viewer
+  labels:
+    {{- include "pdb-operator.labels" . | nindent 4 }}
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+rules:
+  - apiGroups:
+      - availability.pdboperator.io
+    resources:
+      - pdbpolicies
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - availability.pdboperator.io
+    resources:
+      - pdbpolicies/status
+    verbs:
+      - get
+{{- end }}

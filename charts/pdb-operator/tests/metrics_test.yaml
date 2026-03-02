@@ -1,0 +1,84 @@
+suite: Metrics
+templates:
+  - metrics-service.yaml
+  - metrics-auth-clusterrole.yaml
+  - metrics-auth-clusterrolebinding.yaml
+  - metrics-reader-clusterrole.yaml
+release:
+  name: test
+  namespace: pdb-operator-system
+tests:
+  # -------------------------------------------------------------------------
+  # Metrics Service
+  # -------------------------------------------------------------------------
+  - it: should create metrics Service by default
+    template: metrics-service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: test-pdb-operator-metrics
+      - equal:
+          path: spec.ports[0].port
+          value: 8443
+
+  - it: should not create metrics Service when disabled
+    template: metrics-service.yaml
+    set:
+      metrics.service.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should use custom service type
+    template: metrics-service.yaml
+    set:
+      metrics.service.type: NodePort
+    asserts:
+      - equal:
+          path: spec.type
+          value: NodePort
+
+  - it: should include service annotations
+    template: metrics-service.yaml
+    set:
+      metrics.service.annotations:
+        prometheus.io/scrape: "true"
+    asserts:
+      - isSubset:
+          path: metadata.annotations
+          content:
+            prometheus.io/scrape: "true"
+
+  # -------------------------------------------------------------------------
+  # Metrics auth ClusterRole
+  # -------------------------------------------------------------------------
+  - it: should create metrics auth ClusterRole when secure
+    template: metrics-auth-clusterrole.yaml
+    asserts:
+      - isKind:
+          of: ClusterRole
+      - equal:
+          path: metadata.name
+          value: test-pdb-operator-metrics-auth
+
+  - it: should not create metrics auth ClusterRole when not secure
+    template: metrics-auth-clusterrole.yaml
+    set:
+      metrics.secure: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  # -------------------------------------------------------------------------
+  # Metrics reader ClusterRole
+  # -------------------------------------------------------------------------
+  - it: should create metrics reader ClusterRole when secure
+    template: metrics-reader-clusterrole.yaml
+    asserts:
+      - isKind:
+          of: ClusterRole
+      - equal:
+          path: metadata.name
+          value: test-pdb-operator-metrics-reader

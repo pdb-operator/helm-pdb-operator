@@ -1,0 +1,282 @@
+# -- Override the name of the chart
+nameOverride: ""
+# -- Override the full name of the chart
+fullnameOverride: ""
+
+# -- Labels to add to all resources
+commonLabels: {}
+
+# -- Number of operator replicas (ignored when autoscaling is enabled)
+replicaCount: 2
+
+image:
+  # -- Container image repository
+  repository: ghcr.io/pdb-operator/pdb-operator
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+  # -- Overrides the image tag whose default is the chart appVersion
+  tag: ""
+
+# -- Image pull secrets for private registries
+imagePullSecrets: []
+
+serviceAccount:
+  # -- Specifies whether a service account should be created
+  create: true
+  # -- Annotations to add to the service account
+  annotations: {}
+  # -- The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template.
+  name: ""
+
+# -- Annotations to add to the operator pod
+podAnnotations:
+  kubectl.kubernetes.io/default-container: pdb-operator
+
+# -- Labels to add to the operator pod
+podLabels: {}
+
+# -- Pod security context
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+# -- Container security context
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - "ALL"
+
+# -- Resource requests and limits for the pdb-operator container
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+# -- Termination grace period in seconds
+terminationGracePeriodSeconds: 10
+
+# -- Node selector for pod scheduling
+nodeSelector: {}
+
+# -- Tolerations for pod scheduling
+tolerations: []
+
+# -- Affinity rules for pod scheduling
+affinity: {}
+
+# -- Topology spread constraints for pod scheduling
+topologySpreadConstraints: []
+
+# -- Priority class name for the operator pod
+priorityClassName: ""
+
+# -- Extra environment variables for the pdb-operator container
+extraEnv: []
+
+# -- Extra volumes for the pod
+extraVolumes: []
+
+# -- Extra volume mounts for the pdb-operator container
+extraVolumeMounts: []
+
+# Controller-specific settings
+controller:
+  # -- Maximum number of concurrent reconcile loops
+  maxConcurrentReconciles: 5
+  # -- Watch only this namespace (empty string means all namespaces)
+  watchNamespace: ""
+  # -- Sync period for re-reconciling existing resources
+  syncPeriod: "10h"
+  # -- Log level: debug, info, warn, error
+  logLevel: "info"
+
+# Cache configuration
+cache:
+  # -- Policy cache TTL
+  policyCacheTTL: "5m"
+  # -- Policy cache maximum size
+  policyCacheSize: 100
+  # -- Maintenance window cache TTL
+  maintenanceWindowCacheTTL: "1m"
+
+# Retry configuration
+retry:
+  # -- Maximum number of retry attempts
+  maxAttempts: 5
+  # -- Initial delay between retries
+  initialDelay: "100ms"
+  # -- Maximum delay between retries
+  maxDelay: "30s"
+  # -- Backoff multiplier factor
+  backoffFactor: 2.0
+
+# Tracing configuration
+tracing:
+  # -- Enable OpenTelemetry tracing
+  enabled: true
+  # -- OTLP collector endpoint
+  endpoint: ""
+  # -- Trace sampling rate (0.0 to 1.0)
+  sampleRate: ""
+
+# Health probe configuration
+healthProbe:
+  # -- Port for health probes
+  port: 8081
+  liveness:
+    # -- Initial delay seconds for liveness probe
+    initialDelaySeconds: 15
+    # -- Period seconds for liveness probe
+    periodSeconds: 20
+  readiness:
+    # -- Initial delay seconds for readiness probe
+    initialDelaySeconds: 5
+    # -- Period seconds for readiness probe
+    periodSeconds: 10
+
+# Leader election configuration
+leaderElection:
+  # -- Enable leader election for HA deployments
+  enabled: true
+
+# Metrics configuration
+metrics:
+  # -- Metrics bind address. ":8443" for HTTPS, ":8080" for HTTP, "0" to disable
+  bindAddress: ":8443"
+  # -- Serve metrics over HTTPS
+  secure: true
+  # -- Path to directory containing metrics TLS certificate
+  certPath: ""
+  # -- Metrics TLS certificate filename
+  certName: "tls.crt"
+  # -- Metrics TLS key filename
+  certKey: "tls.key"
+  service:
+    # -- Create the metrics service
+    enabled: true
+    # -- Metrics service port
+    port: 8443
+    # -- Metrics service type
+    type: ClusterIP
+    # -- Annotations to add to the metrics service
+    annotations: {}
+
+# HTTP/2 configuration
+http2:
+  # -- Enable HTTP/2 for metrics and webhook servers (disabled by default for CVE mitigation)
+  enabled: false
+
+# Webhook configuration
+webhooks:
+  # -- Enable admission webhooks
+  enabled: true
+  # -- Webhook service port
+  port: 443
+  # -- Webhook container target port
+  targetPort: 9443
+  # -- Failure policy: Fail or Ignore
+  failurePolicy: Fail
+  # -- Webhook timeout in seconds
+  timeoutSeconds: 10
+  # -- Annotations to add to the webhook service
+  serviceAnnotations: {}
+
+# cert-manager integration
+certManager:
+  # -- Enable cert-manager for automatic TLS certificate management.
+  # Requires cert-manager to be installed in the cluster.
+  enabled: true
+  # -- Use a self-signed issuer (creates an Issuer resource)
+  selfSigned: true
+  # -- Issuer kind: Issuer or ClusterIssuer (only when selfSigned is false)
+  issuerKind: Issuer
+  # -- Name of an existing issuer (only when selfSigned is false)
+  issuerName: ""
+  # -- Certificate duration
+  duration: ""
+  # -- Certificate renewBefore
+  renewBefore: ""
+  # -- Additional annotations for the Certificate resource
+  annotations: {}
+
+# Deployment strategy
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1
+    maxSurge: 0
+
+# Horizontal Pod Autoscaler
+autoscaling:
+  # -- Enable HPA
+  enabled: true
+  # -- Minimum replicas
+  minReplicas: 2
+  # -- Maximum replicas
+  maxReplicas: 4
+  # -- Target CPU utilization percentage
+  targetCPUUtilizationPercentage: 80
+  # -- Target memory utilization percentage
+  targetMemoryUtilizationPercentage: 80
+
+# Pod Disruption Budget
+podDisruptionBudget:
+  # -- Enable PDB
+  enabled: true
+  # -- Minimum available pods
+  minAvailable: 1
+
+# Network Policy
+networkPolicy:
+  # -- Enable network policy for metrics endpoint protection
+  enabled: false
+  # -- Namespace selector for pods allowed to scrape metrics
+  namespaceSelector:
+    matchLabels:
+      metrics: enabled
+
+# Prometheus ServiceMonitor
+serviceMonitor:
+  # -- Enable ServiceMonitor for Prometheus scraping
+  enabled: false
+  # -- Additional labels for the ServiceMonitor
+  labels: {}
+  # -- Scrape interval
+  interval: ""
+  # -- Scrape timeout
+  scrapeTimeout: ""
+  # -- Scheme: https or http
+  scheme: https
+  # -- Bearer token file for authentication
+  bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+  # -- TLS configuration
+  tlsConfig:
+    insecureSkipVerify: true
+
+# Prometheus PrometheusRule
+prometheusRule:
+  # -- Enable PrometheusRule with alert definitions
+  enabled: false
+  # -- Additional labels for the PrometheusRule
+  labels: {}
+  # -- Override default alert rules (when empty, built-in rules are used)
+  rules: []
+
+# CRD installation
+crds:
+  # -- Install CRDs as part of the Helm release (managed by Helm lifecycle).
+  # When true, CRDs are created as regular templates and can be upgraded/deleted by Helm.
+  # When false, CRDs from the crds/ directory are only installed on first install (Helm default behavior).
+  install: false
+
+# CRD user-facing roles
+crdRoles:
+  # -- Create admin/editor/viewer ClusterRoles for PDBPolicy
+  enabled: true

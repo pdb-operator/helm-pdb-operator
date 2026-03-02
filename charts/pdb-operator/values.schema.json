@@ -1,0 +1,649 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "nameOverride": {
+      "type": "string",
+      "description": "Override the name of the chart"
+    },
+    "fullnameOverride": {
+      "type": "string",
+      "description": "Override the full name of the chart"
+    },
+    "commonLabels": {
+      "type": "object",
+      "description": "Labels to add to all resources",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "replicaCount": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Number of operator replicas (ignored when autoscaling is enabled)"
+    },
+    "image": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "repository": {
+          "type": "string",
+          "description": "Container image repository"
+        },
+        "pullPolicy": {
+          "type": "string",
+          "enum": ["Always", "IfNotPresent", "Never"],
+          "description": "Image pull policy"
+        },
+        "tag": {
+          "type": "string",
+          "description": "Overrides the image tag whose default is the chart appVersion"
+        }
+      }
+    },
+    "imagePullSecrets": {
+      "type": "array",
+      "description": "Image pull secrets for private registries",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "serviceAccount": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "create": {
+          "type": "boolean",
+          "description": "Specifies whether a service account should be created"
+        },
+        "annotations": {
+          "type": "object",
+          "description": "Annotations to add to the service account",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the service account to use"
+        }
+      }
+    },
+    "podAnnotations": {
+      "type": "object",
+      "description": "Annotations to add to the operator pod",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "podLabels": {
+      "type": "object",
+      "description": "Labels to add to the operator pod",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "podSecurityContext": {
+      "type": "object",
+      "description": "Pod security context"
+    },
+    "securityContext": {
+      "type": "object",
+      "description": "Container security context"
+    },
+    "resources": {
+      "type": "object",
+      "description": "Resource requests and limits for the pdb-operator container",
+      "properties": {
+        "limits": {
+          "type": "object",
+          "properties": {
+            "cpu": {
+              "type": "string"
+            },
+            "memory": {
+              "type": "string"
+            }
+          }
+        },
+        "requests": {
+          "type": "object",
+          "properties": {
+            "cpu": {
+              "type": "string"
+            },
+            "memory": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "terminationGracePeriodSeconds": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Termination grace period in seconds"
+    },
+    "nodeSelector": {
+      "type": "object",
+      "description": "Node selector for pod scheduling",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "tolerations": {
+      "type": "array",
+      "description": "Tolerations for pod scheduling",
+      "items": {
+        "type": "object"
+      }
+    },
+    "affinity": {
+      "type": "object",
+      "description": "Affinity rules for pod scheduling"
+    },
+    "topologySpreadConstraints": {
+      "type": "array",
+      "description": "Topology spread constraints for pod scheduling",
+      "items": {
+        "type": "object"
+      }
+    },
+    "priorityClassName": {
+      "type": "string",
+      "description": "Priority class name for the operator pod"
+    },
+    "extraEnv": {
+      "type": "array",
+      "description": "Extra environment variables for the pdb-operator container",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "valueFrom": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "extraVolumes": {
+      "type": "array",
+      "description": "Extra volumes for the pod",
+      "items": {
+        "type": "object"
+      }
+    },
+    "extraVolumeMounts": {
+      "type": "array",
+      "description": "Extra volume mounts for the pdb-operator container",
+      "items": {
+        "type": "object"
+      }
+    },
+    "controller": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "maxConcurrentReconciles": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum number of concurrent reconcile loops"
+        },
+        "watchNamespace": {
+          "type": "string",
+          "description": "Watch only this namespace (empty string means all namespaces)"
+        },
+        "syncPeriod": {
+          "type": "string",
+          "description": "Sync period for re-reconciling existing resources (e.g. '10h')"
+        },
+        "logLevel": {
+          "type": "string",
+          "enum": ["debug", "info", "warn", "error"],
+          "description": "Log level: debug, info, warn, error"
+        }
+      }
+    },
+    "cache": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "policyCacheTTL": {
+          "type": "string",
+          "description": "Policy cache TTL (e.g. '5m')"
+        },
+        "policyCacheSize": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Policy cache maximum size"
+        },
+        "maintenanceWindowCacheTTL": {
+          "type": "string",
+          "description": "Maintenance window cache TTL (e.g. '1m')"
+        }
+      }
+    },
+    "retry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "maxAttempts": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum number of retry attempts"
+        },
+        "initialDelay": {
+          "type": "string",
+          "description": "Initial delay between retries (e.g. '100ms')"
+        },
+        "maxDelay": {
+          "type": "string",
+          "description": "Maximum delay between retries (e.g. '30s')"
+        },
+        "backoffFactor": {
+          "type": "number",
+          "minimum": 1.0,
+          "description": "Backoff multiplier factor"
+        }
+      }
+    },
+    "tracing": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable OpenTelemetry tracing"
+        },
+        "endpoint": {
+          "type": "string",
+          "description": "OTLP collector endpoint"
+        },
+        "sampleRate": {
+          "type": "string",
+          "description": "Trace sampling rate (0.0 to 1.0)"
+        }
+      }
+    },
+    "healthProbe": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535,
+          "description": "Port for health probes"
+        },
+        "liveness": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "initialDelaySeconds": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Initial delay seconds for liveness probe"
+            },
+            "periodSeconds": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Period seconds for liveness probe"
+            }
+          }
+        },
+        "readiness": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "initialDelaySeconds": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Initial delay seconds for readiness probe"
+            },
+            "periodSeconds": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Period seconds for readiness probe"
+            }
+          }
+        }
+      }
+    },
+    "leaderElection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable leader election for HA deployments"
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bindAddress": {
+          "type": "string",
+          "description": "Metrics bind address. ':8443' for HTTPS, ':8080' for HTTP, '0' to disable"
+        },
+        "secure": {
+          "type": "boolean",
+          "description": "Serve metrics over HTTPS"
+        },
+        "certPath": {
+          "type": "string",
+          "description": "Path to directory containing metrics TLS certificate"
+        },
+        "certName": {
+          "type": "string",
+          "description": "Metrics TLS certificate filename"
+        },
+        "certKey": {
+          "type": "string",
+          "description": "Metrics TLS key filename"
+        },
+        "service": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Create the metrics service"
+            },
+            "port": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65535,
+              "description": "Metrics service port"
+            },
+            "type": {
+              "type": "string",
+              "enum": ["ClusterIP", "NodePort", "LoadBalancer"],
+              "description": "Metrics service type"
+            },
+            "annotations": {
+              "type": "object",
+              "description": "Annotations to add to the metrics service",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "http2": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable HTTP/2 for metrics and webhook servers"
+        }
+      }
+    },
+    "webhooks": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable admission webhooks"
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535,
+          "description": "Webhook service port"
+        },
+        "targetPort": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535,
+          "description": "Webhook container target port"
+        },
+        "failurePolicy": {
+          "type": "string",
+          "enum": ["Fail", "Ignore"],
+          "description": "Failure policy for admission webhooks"
+        },
+        "timeoutSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 30,
+          "description": "Webhook timeout in seconds"
+        },
+        "serviceAnnotations": {
+          "type": "object",
+          "description": "Annotations to add to the webhook service",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "certManager": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable cert-manager for automatic TLS certificate management"
+        },
+        "selfSigned": {
+          "type": "boolean",
+          "description": "Use a self-signed issuer (creates an Issuer resource)"
+        },
+        "issuerKind": {
+          "type": "string",
+          "enum": ["Issuer", "ClusterIssuer"],
+          "description": "Issuer kind (only when selfSigned is false)"
+        },
+        "issuerName": {
+          "type": "string",
+          "description": "Name of an existing issuer (only when selfSigned is false)"
+        },
+        "duration": {
+          "type": "string",
+          "description": "Certificate duration (e.g. '2160h')"
+        },
+        "renewBefore": {
+          "type": "string",
+          "description": "Certificate renewBefore (e.g. '360h')"
+        },
+        "annotations": {
+          "type": "object",
+          "description": "Additional annotations for the Certificate resource",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "strategy": {
+      "type": "object",
+      "description": "Deployment strategy",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["RollingUpdate", "Recreate"],
+          "description": "Deployment strategy type"
+        },
+        "rollingUpdate": {
+          "type": "object",
+          "properties": {
+            "maxUnavailable": {
+              "description": "Maximum number of unavailable pods"
+            },
+            "maxSurge": {
+              "description": "Maximum number of pods that can be created above desired"
+            }
+          }
+        }
+      }
+    },
+    "autoscaling": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable HPA"
+        },
+        "minReplicas": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Minimum replicas"
+        },
+        "maxReplicas": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum replicas"
+        },
+        "targetCPUUtilizationPercentage": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Target CPU utilization percentage"
+        },
+        "targetMemoryUtilizationPercentage": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Target memory utilization percentage"
+        }
+      }
+    },
+    "podDisruptionBudget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable PDB"
+        },
+        "minAvailable": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Minimum available pods"
+        }
+      }
+    },
+    "networkPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable network policy for metrics endpoint protection"
+        },
+        "namespaceSelector": {
+          "type": "object",
+          "description": "Namespace selector for pods allowed to scrape metrics"
+        }
+      }
+    },
+    "serviceMonitor": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable ServiceMonitor for Prometheus scraping"
+        },
+        "labels": {
+          "type": "object",
+          "description": "Additional labels for the ServiceMonitor",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "interval": {
+          "type": "string",
+          "description": "Scrape interval (e.g. '30s')"
+        },
+        "scrapeTimeout": {
+          "type": "string",
+          "description": "Scrape timeout (e.g. '10s')"
+        },
+        "scheme": {
+          "type": "string",
+          "enum": ["https", "http"],
+          "description": "Scheme for scraping metrics"
+        },
+        "bearerTokenFile": {
+          "type": "string",
+          "description": "Bearer token file for authentication"
+        },
+        "tlsConfig": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "insecureSkipVerify": {
+              "type": "boolean",
+              "description": "Skip TLS certificate verification"
+            }
+          }
+        }
+      }
+    },
+    "prometheusRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable PrometheusRule with alert definitions"
+        },
+        "labels": {
+          "type": "object",
+          "description": "Additional labels for the PrometheusRule",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "rules": {
+          "type": "array",
+          "description": "Override default alert rules (when empty, built-in rules are used)",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "crds": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "install": {
+          "type": "boolean",
+          "description": "Install CRDs as part of the Helm release (managed by Helm lifecycle)"
+        }
+      }
+    },
+    "crdRoles": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Create admin/editor/viewer ClusterRoles for PDBPolicy"
+        }
+      }
+    }
+  }
+}

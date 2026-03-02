@@ -1,0 +1,68 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: pdb-operator
+  namespace: pdb-operator-system
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: charts/pdb-operator
+      sourceRef:
+        kind: GitRepository
+        name: pdb-operator
+        namespace: flux-system
+      reconcileStrategy: Revision
+  install:
+    createNamespace: true
+    # Skip Helm's crds/ auto-install: CRDs are managed via crds.install=true in values
+    skipCRDs: true
+    remediation:
+      retries: 3
+  upgrade:
+    # Skip Helm's crds/ auto-install: CRDs are managed via crds.install=true in values
+    skipCRDs: true
+    remediation:
+      retries: 3
+  values:
+    # Manage CRDs as Helm templates so Flux can upgrade them on chart updates.
+    # This replaces Helm's default crds/ behavior which only installs on first install.
+    crds:
+      install: true
+
+    replicaCount: 2
+
+    image:
+      repository: ghcr.io/pdb-operator/pdb-operator
+      # tag: v0.1.0
+
+    webhooks:
+      enabled: true
+
+    certManager:
+      enabled: true
+
+    metrics:
+      secure: true
+      service:
+        enabled: true
+
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 4
+
+    podDisruptionBudget:
+      enabled: true
+      minAvailable: 1
+
+    serviceMonitor:
+      enabled: false
+
+    # prometheusRule:
+    #   enabled: true
+
+    # tracing:
+    #   endpoint: "otel-collector.observability:4317"
+    #   sampleRate: "0.1"
