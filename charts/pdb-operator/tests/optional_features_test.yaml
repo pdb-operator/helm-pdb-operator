@@ -1,0 +1,233 @@
+suite: Optional Features
+templates:
+  - networkpolicy.yaml
+  - servicemonitor.yaml
+  - prometheusrule.yaml
+  - pdbpolicy-roles.yaml
+  - crds.yaml
+release:
+  name: test
+  namespace: pdb-operator-system
+tests:
+  # -------------------------------------------------------------------------
+  # NetworkPolicy
+  # -------------------------------------------------------------------------
+  - it: should not create NetworkPolicy by default
+    template: networkpolicy.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create NetworkPolicy when enabled
+    template: networkpolicy.yaml
+    set:
+      networkPolicy.enabled: true
+    asserts:
+      - isKind:
+          of: NetworkPolicy
+      - equal:
+          path: metadata.name
+          value: test-pdb-operator-allow-metrics
+      - contains:
+          path: spec.policyTypes
+          content: Ingress
+      - equal:
+          path: spec.ingress[0].ports[0].port
+          value: 8443
+
+  # -------------------------------------------------------------------------
+  # ServiceMonitor
+  # -------------------------------------------------------------------------
+  - it: should not create ServiceMonitor by default
+    template: servicemonitor.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create ServiceMonitor when enabled
+    template: servicemonitor.yaml
+    set:
+      serviceMonitor.enabled: true
+    asserts:
+      - isKind:
+          of: ServiceMonitor
+      - equal:
+          path: metadata.name
+          value: test-pdb-operator
+      - equal:
+          path: spec.endpoints[0].path
+          value: /metrics
+      - equal:
+          path: spec.endpoints[0].scheme
+          value: https
+
+  - it: should include custom ServiceMonitor labels
+    template: servicemonitor.yaml
+    set:
+      serviceMonitor.enabled: true
+      serviceMonitor.labels:
+        release: prometheus
+    asserts:
+      - isSubset:
+          path: metadata.labels
+          content:
+            release: prometheus
+
+  - it: should set custom interval
+    template: servicemonitor.yaml
+    set:
+      serviceMonitor.enabled: true
+      serviceMonitor.interval: 30s
+    asserts:
+      - equal:
+          path: spec.endpoints[0].interval
+          value: 30s
+
+  - it: should set TLS config for https scheme
+    template: servicemonitor.yaml
+    set:
+      serviceMonitor.enabled: true
+    asserts:
+      - equal:
+          path: spec.endpoints[0].tlsConfig.insecureSkipVerify
+          value: true
+
+  # -------------------------------------------------------------------------
+  # PrometheusRule
+  # -------------------------------------------------------------------------
+  - it: should not create PrometheusRule by default
+    template: prometheusrule.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create PrometheusRule when enabled
+    template: prometheusrule.yaml
+    set:
+      prometheusRule.enabled: true
+    asserts:
+      - isKind:
+          of: PrometheusRule
+      - equal:
+          path: metadata.name
+          value: test-pdb-operator
+
+  - it: should include default alert groups when rules empty
+    template: prometheusrule.yaml
+    set:
+      prometheusRule.enabled: true
+    asserts:
+      - equal:
+          path: spec.groups[0].name
+          value: pdb-operator.health
+      - equal:
+          path: spec.groups[0].rules[0].alert
+          value: PDBOperatorDown
+
+  - it: should include custom PrometheusRule labels
+    template: prometheusrule.yaml
+    set:
+      prometheusRule.enabled: true
+      prometheusRule.labels:
+        release: prometheus
+    asserts:
+      - isSubset:
+          path: metadata.labels
+          content:
+            release: prometheus
+
+  - it: should use custom rules when provided
+    template: prometheusrule.yaml
+    set:
+      prometheusRule.enabled: true
+      prometheusRule.rules:
+        - name: custom-alerts
+          rules:
+            - alert: CustomAlert
+              expr: up == 0
+              for: 1m
+    asserts:
+      - equal:
+          path: spec.groups[0].name
+          value: custom-alerts
+
+  # -------------------------------------------------------------------------
+  # PDBPolicy roles
+  # -------------------------------------------------------------------------
+  - it: should create admin/editor/viewer roles by default
+    template: pdbpolicy-roles.yaml
+    asserts:
+      - hasDocuments:
+          count: 3
+
+  - it: should create admin role with aggregate label
+    template: pdbpolicy-roles.yaml
+    documentIndex: 0
+    asserts:
+      - isKind:
+          of: ClusterRole
+      - equal:
+          path: metadata.name
+          value: test-pdb-operator-pdbpolicy-admin
+      - isSubset:
+          path: metadata.labels
+          content:
+            rbac.authorization.k8s.io/aggregate-to-admin: "true"
+
+  - it: should create editor role with aggregate label
+    template: pdbpolicy-roles.yaml
+    documentIndex: 1
+    asserts:
+      - isKind:
+          of: ClusterRole
+      - equal:
+          path: metadata.name
+          value: test-pdb-operator-pdbpolicy-editor
+      - isSubset:
+          path: metadata.labels
+          content:
+            rbac.authorization.k8s.io/aggregate-to-edit: "true"
+
+  - it: should create viewer role with aggregate label
+    template: pdbpolicy-roles.yaml
+    documentIndex: 2
+    asserts:
+      - isKind:
+          of: ClusterRole
+      - equal:
+          path: metadata.name
+          value: test-pdb-operator-pdbpolicy-viewer
+      - isSubset:
+          path: metadata.labels
+          content:
+            rbac.authorization.k8s.io/aggregate-to-view: "true"
+
+  - it: should not create CRD roles when disabled
+    template: pdbpolicy-roles.yaml
+    set:
+      crdRoles.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  # -------------------------------------------------------------------------
+  # CRDs template
+  # -------------------------------------------------------------------------
+  - it: should not render CRD template by default
+    template: crds.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render CRD when crds.install is true
+    template: crds.yaml
+    set:
+      crds.install: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: CustomResourceDefinition
+      - equal:
+          path: metadata.name
+          value: pdbpolicies.availability.pdboperator.io

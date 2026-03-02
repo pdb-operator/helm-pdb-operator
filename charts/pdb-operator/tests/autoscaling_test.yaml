@@ -1,0 +1,104 @@
+suite: Autoscaling and Disruption
+templates:
+  - hpa.yaml
+  - pdb.yaml
+release:
+  name: test
+  namespace: pdb-operator-system
+tests:
+  # -------------------------------------------------------------------------
+  # HPA
+  # -------------------------------------------------------------------------
+  - it: should create HPA when enabled
+    template: hpa.yaml
+    asserts:
+      - isKind:
+          of: HorizontalPodAutoscaler
+      - equal:
+          path: metadata.name
+          value: test-pdb-operator
+      - equal:
+          path: spec.scaleTargetRef.kind
+          value: Deployment
+      - equal:
+          path: spec.scaleTargetRef.name
+          value: test-pdb-operator
+
+  - it: should not create HPA when disabled
+    template: hpa.yaml
+    set:
+      autoscaling.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should set min and max replicas
+    template: hpa.yaml
+    set:
+      autoscaling.minReplicas: 3
+      autoscaling.maxReplicas: 10
+    asserts:
+      - equal:
+          path: spec.minReplicas
+          value: 3
+      - equal:
+          path: spec.maxReplicas
+          value: 10
+
+  - it: should include CPU metric
+    template: hpa.yaml
+    asserts:
+      - contains:
+          path: spec.metrics
+          content:
+            type: Resource
+            resource:
+              name: cpu
+              target:
+                type: Utilization
+                averageUtilization: 80
+
+  - it: should include memory metric
+    template: hpa.yaml
+    asserts:
+      - contains:
+          path: spec.metrics
+          content:
+            type: Resource
+            resource:
+              name: memory
+              target:
+                type: Utilization
+                averageUtilization: 80
+
+  # -------------------------------------------------------------------------
+  # PDB
+  # -------------------------------------------------------------------------
+  - it: should create PDB when enabled
+    template: pdb.yaml
+    asserts:
+      - isKind:
+          of: PodDisruptionBudget
+      - equal:
+          path: metadata.name
+          value: test-pdb-operator
+      - equal:
+          path: spec.minAvailable
+          value: 1
+
+  - it: should not create PDB when disabled
+    template: pdb.yaml
+    set:
+      podDisruptionBudget.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should use correct selector labels in PDB
+    template: pdb.yaml
+    asserts:
+      - isSubset:
+          path: spec.selector.matchLabels
+          content:
+            app.kubernetes.io/name: pdb-operator
+            app.kubernetes.io/instance: test

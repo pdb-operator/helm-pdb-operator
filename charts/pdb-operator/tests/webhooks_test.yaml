@@ -1,0 +1,230 @@
+suite: Webhooks
+templates:
+  - mutatingwebhookconfiguration.yaml
+  - validatingwebhookconfiguration.yaml
+  - webhook-service.yaml
+  - certificate.yaml
+release:
+  name: test
+  namespace: pdb-operator-system
+tests:
+  # -------------------------------------------------------------------------
+  # MutatingWebhookConfiguration
+  # -------------------------------------------------------------------------
+  - it: should create MutatingWebhookConfiguration when webhooks enabled
+    template: mutatingwebhookconfiguration.yaml
+    asserts:
+      - isKind:
+          of: MutatingWebhookConfiguration
+      - equal:
+          path: webhooks[0].clientConfig.service.name
+          value: test-pdb-operator-webhook
+      - equal:
+          path: webhooks[0].clientConfig.service.namespace
+          value: pdb-operator-system
+      - equal:
+          path: webhooks[0].failurePolicy
+          value: Fail
+
+  - it: should not create MutatingWebhookConfiguration when webhooks disabled
+    template: mutatingwebhookconfiguration.yaml
+    set:
+      webhooks.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should include cert-manager CA injection annotation
+    template: mutatingwebhookconfiguration.yaml
+    asserts:
+      - equal:
+          path: metadata.annotations["cert-manager.io/inject-ca-from"]
+          value: pdb-operator-system/test-pdb-operator-serving-cert
+
+  - it: should not include cert-manager annotation when cert-manager disabled
+    template: mutatingwebhookconfiguration.yaml
+    set:
+      certManager.enabled: false
+    asserts:
+      - notExists:
+          path: metadata.annotations
+
+  - it: should set custom failure policy
+    template: mutatingwebhookconfiguration.yaml
+    set:
+      webhooks.failurePolicy: Ignore
+    asserts:
+      - equal:
+          path: webhooks[0].failurePolicy
+          value: Ignore
+
+  - it: should use correct mutating webhook path
+    template: mutatingwebhookconfiguration.yaml
+    asserts:
+      - equal:
+          path: webhooks[0].clientConfig.service.path
+          value: /mutate-availability-pdboperator-io-v1alpha1-pdbpolicy
+
+  - it: should set timeoutSeconds on mutating webhook
+    template: mutatingwebhookconfiguration.yaml
+    asserts:
+      - equal:
+          path: webhooks[0].timeoutSeconds
+          value: 10
+
+  - it: should use custom timeoutSeconds
+    template: mutatingwebhookconfiguration.yaml
+    set:
+      webhooks.timeoutSeconds: 5
+    asserts:
+      - equal:
+          path: webhooks[0].timeoutSeconds
+          value: 5
+
+  # -------------------------------------------------------------------------
+  # ValidatingWebhookConfiguration
+  # -------------------------------------------------------------------------
+  - it: should create ValidatingWebhookConfiguration when webhooks enabled
+    template: validatingwebhookconfiguration.yaml
+    asserts:
+      - isKind:
+          of: ValidatingWebhookConfiguration
+      - equal:
+          path: webhooks[0].clientConfig.service.name
+          value: test-pdb-operator-webhook
+
+  - it: should use correct validating webhook path
+    template: validatingwebhookconfiguration.yaml
+    asserts:
+      - equal:
+          path: webhooks[0].clientConfig.service.path
+          value: /validate-availability-pdboperator-io-v1alpha1-pdbpolicy
+
+  - it: should include CREATE and UPDATE in validating webhook operations
+    template: validatingwebhookconfiguration.yaml
+    asserts:
+      - contains:
+          path: webhooks[0].rules[0].operations
+          content: CREATE
+      - contains:
+          path: webhooks[0].rules[0].operations
+          content: UPDATE
+
+  - it: should not create ValidatingWebhookConfiguration when webhooks disabled
+    template: validatingwebhookconfiguration.yaml
+    set:
+      webhooks.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should set timeoutSeconds on validating webhook
+    template: validatingwebhookconfiguration.yaml
+    asserts:
+      - equal:
+          path: webhooks[0].timeoutSeconds
+          value: 10
+
+  # -------------------------------------------------------------------------
+  # Webhook Service
+  # -------------------------------------------------------------------------
+  - it: should create webhook Service when webhooks enabled
+    template: webhook-service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: test-pdb-operator-webhook
+      - equal:
+          path: spec.ports[0].port
+          value: 443
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 9443
+
+  - it: should not create webhook Service when webhooks disabled
+    template: webhook-service.yaml
+    set:
+      webhooks.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  # -------------------------------------------------------------------------
+  # Certificate
+  # -------------------------------------------------------------------------
+  - it: should create Issuer and Certificate when cert-manager and webhooks enabled
+    template: certificate.yaml
+    asserts:
+      - hasDocuments:
+          count: 2
+
+  - it: should create self-signed Issuer
+    template: certificate.yaml
+    documentIndex: 0
+    asserts:
+      - isKind:
+          of: Issuer
+      - equal:
+          path: metadata.name
+          value: test-pdb-operator-selfsigned-issuer
+
+  - it: should create Certificate with correct DNS names
+    template: certificate.yaml
+    documentIndex: 1
+    asserts:
+      - isKind:
+          of: Certificate
+      - contains:
+          path: spec.dnsNames
+          content: test-pdb-operator-webhook.pdb-operator-system.svc
+      - contains:
+          path: spec.dnsNames
+          content: test-pdb-operator-webhook.pdb-operator-system.svc.cluster.local
+      - equal:
+          path: spec.secretName
+          value: test-pdb-operator-webhook-cert
+
+  - it: should reference self-signed issuer
+    template: certificate.yaml
+    documentIndex: 1
+    asserts:
+      - equal:
+          path: spec.issuerRef.kind
+          value: Issuer
+      - equal:
+          path: spec.issuerRef.name
+          value: test-pdb-operator-selfsigned-issuer
+
+  - it: should reference external issuer when selfSigned is false
+    template: certificate.yaml
+    set:
+      certManager.selfSigned: false
+      certManager.issuerKind: ClusterIssuer
+      certManager.issuerName: letsencrypt-prod
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: spec.issuerRef.kind
+          value: ClusterIssuer
+      - equal:
+          path: spec.issuerRef.name
+          value: letsencrypt-prod
+
+  - it: should not create certificate resources when webhooks disabled
+    template: certificate.yaml
+    set:
+      webhooks.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should not create certificate resources when cert-manager disabled
+    template: certificate.yaml
+    set:
+      certManager.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

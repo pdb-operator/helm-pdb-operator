@@ -1,0 +1,33 @@
+{{- if .Values.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "pdb-operator.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "pdb-operator.labels" . | nindent 4 }}
+    {{- with .Values.serviceMonitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  endpoints:
+    - path: /metrics
+      port: https
+      scheme: {{ .Values.serviceMonitor.scheme }}
+      {{- with .Values.serviceMonitor.interval }}
+      interval: {{ . }}
+      {{- end }}
+      {{- with .Values.serviceMonitor.scrapeTimeout }}
+      scrapeTimeout: {{ . }}
+      {{- end }}
+      {{- if .Values.serviceMonitor.bearerTokenFile }}
+      bearerTokenFile: {{ .Values.serviceMonitor.bearerTokenFile }}
+      {{- end }}
+      {{- if eq .Values.serviceMonitor.scheme "https" }}
+      tlsConfig:
+        insecureSkipVerify: {{ .Values.serviceMonitor.tlsConfig.insecureSkipVerify }}
+      {{- end }}
+  selector:
+    matchLabels:
+      {{- include "pdb-operator.selectorLabels" . | nindent 6 }}
+{{- end }}

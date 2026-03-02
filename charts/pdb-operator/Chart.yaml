@@ -1,0 +1,26 @@
+apiVersion: v2
+name: pdb-operator
+description: Automated PodDisruptionBudget management for Kubernetes via PDBPolicy CRDs
+type: application
+version: 0.1.0
+appVersion: "0.0.1"
+kubeVersion: ">=1.26.0-0"
+home: https://pdboperator.io
+sources:
+  - https://github.com/pdb-operator/pdb-operator
+  - https://github.com/pdb-operator/helm-pdb-operator
+maintainers:
+  - name: pdb-operator
+    url: https://pdboperator.io
+keywords:
+  - kubernetes
+  - operator
+  - pdb
+  - pod-disruption-budget
+  - availability
+annotations:
+  artifacthub.io/crds: |
+    - kind: PDBPolicy
+      version: v1alpha1
+      name: pdbpolicies.availability.pdboperator.io
+      description: Defines a policy for automatic PodDisruptionBudget management

@@ -1,0 +1,155 @@
+suite: RBAC
+templates:
+  - clusterrole.yaml
+  - clusterrolebinding.yaml
+  - leader-election-role.yaml
+  - leader-election-rolebinding.yaml
+release:
+  name: test
+  namespace: pdb-operator-system
+tests:
+  # -------------------------------------------------------------------------
+  # ClusterRole
+  # -------------------------------------------------------------------------
+  - it: should create the manager ClusterRole
+    template: clusterrole.yaml
+    asserts:
+      - isKind:
+          of: ClusterRole
+      - equal:
+          path: metadata.name
+          value: test-pdb-operator-role
+
+  - it: should include PDBPolicy CRUD rules
+    template: clusterrole.yaml
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups:
+              - availability.pdboperator.io
+            resources:
+              - pdbpolicies
+            verbs:
+              - create
+              - delete
+              - get
+              - list
+              - patch
+              - update
+              - watch
+
+  - it: should include namespace read access
+    template: clusterrole.yaml
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups:
+              - ""
+            resources:
+              - namespaces
+            verbs:
+              - get
+              - list
+              - watch
+
+  - it: should include PodDisruptionBudget CRUD access
+    template: clusterrole.yaml
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups:
+              - policy
+            resources:
+              - poddisruptionbudgets
+            verbs:
+              - create
+              - delete
+              - get
+              - list
+              - patch
+              - update
+              - watch
+
+  - it: should include deployment access
+    template: clusterrole.yaml
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups:
+              - apps
+            resources:
+              - deployments
+            verbs:
+              - get
+              - list
+              - patch
+              - update
+              - watch
+
+  # -------------------------------------------------------------------------
+  # ClusterRoleBinding
+  # -------------------------------------------------------------------------
+  - it: should bind to the correct service account
+    template: clusterrolebinding.yaml
+    asserts:
+      - isKind:
+          of: ClusterRoleBinding
+      - equal:
+          path: roleRef.name
+          value: test-pdb-operator-role
+      - contains:
+          path: subjects
+          content:
+            kind: ServiceAccount
+            name: test-pdb-operator
+            namespace: pdb-operator-system
+
+  # -------------------------------------------------------------------------
+  # Leader election Role
+  # -------------------------------------------------------------------------
+  - it: should create leader election Role when enabled
+    template: leader-election-role.yaml
+    asserts:
+      - isKind:
+          of: Role
+      - equal:
+          path: metadata.name
+          value: test-pdb-operator-leader-election
+
+  - it: should not create leader election Role when disabled
+    template: leader-election-role.yaml
+    set:
+      leaderElection.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  # -------------------------------------------------------------------------
+  # Leader election RoleBinding
+  # -------------------------------------------------------------------------
+  - it: should create leader election RoleBinding when enabled
+    template: leader-election-rolebinding.yaml
+    asserts:
+      - isKind:
+          of: RoleBinding
+      - equal:
+          path: roleRef.name
+          value: test-pdb-operator-leader-election
+      - contains:
+          path: subjects
+          content:
+            kind: ServiceAccount
+            name: test-pdb-operator
+            namespace: pdb-operator-system
+
+  - it: should not create leader election RoleBinding when disabled
+    template: leader-election-rolebinding.yaml
+    set:
+      leaderElection.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

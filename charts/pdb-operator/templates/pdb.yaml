@@ -1,0 +1,16 @@
+{{- if .Values.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "pdb-operator.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "pdb-operator.labels" . | nindent 4 }}
+spec:
+  {{- if .Values.podDisruptionBudget.minAvailable }}
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "pdb-operator.selectorLabels" . | nindent 6 }}
+{{- end }}

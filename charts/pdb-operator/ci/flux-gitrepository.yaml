@@ -1,0 +1,13 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: pdb-operator
+  namespace: flux-system
+spec:
+  interval: 5m
+  url: https://github.com/pdb-operator/helm-pdb-operator
+  ref:
+    # Pin to a specific tag for production
+    # tag: v0.1.0
+    branch: main

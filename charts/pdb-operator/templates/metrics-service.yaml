@@ -1,0 +1,22 @@
+{{- if .Values.metrics.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "pdb-operator.metricsServiceName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "pdb-operator.labels" . | nindent 4 }}
+  {{- with .Values.metrics.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.metrics.service.type }}
+  ports:
+    - name: https
+      port: {{ .Values.metrics.service.port }}
+      targetPort: {{ .Values.metrics.service.port }}
+      protocol: TCP
+  selector:
+    {{- include "pdb-operator.selectorLabels" . | nindent 4 }}
+{{- end }}

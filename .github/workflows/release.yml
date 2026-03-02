@@ -1,0 +1,55 @@
+name: Release
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: write
+  packages: write
+jobs:
+  lint:
+    name: Helm Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4
+      - run: helm lint charts/pdb-operator
+
+  unittest:
+    name: Helm Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4
+      - name: Install helm-unittest plugin
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest.git
+      - run: helm unittest charts/pdb-operator
+
+  release:
+    name: Package & Publish
+    needs: [lint, unittest]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+
+      - uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Package chart
+        run: helm package charts/pdb-operator --destination .cr-release-packages
+
+      - name: Push to OCI registry
+        run: helm push .cr-release-packages/*.tgz oci://ghcr.io/pdb-operator/charts
+
+      - name: Extract release notes from CHANGELOG
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          awk "/^## \\[${VERSION}\\]/{found=1; next} /^## \\[/{if(found) exit} found" CHANGELOG.md > release-notes.md
+
+      - uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2
+        with:
+          body_path: release-notes.md
+          generate_release_notes: false
