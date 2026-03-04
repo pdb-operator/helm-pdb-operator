@@ -2,23 +2,29 @@ name: Release
 on:
   push:
     tags: ["v*"]
-permissions:
-  contents: write
-  packages: write
+permissions: {}
 jobs:
   lint:
     name: Helm Lint
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
       - uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4
       - run: helm lint charts/pdb-operator
 
   unittest:
     name: Helm Unit Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
       - uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4
       - name: Install helm-unittest plugin
         run: helm plugin install --verify=false https://github.com/helm-unittest/helm-unittest.git
@@ -28,15 +34,22 @@ jobs:
     name: Package & Publish
     needs: [lint, unittest]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4
 
       - name: Log in to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u "${{ github.actor }}" --password-stdin
+        run: echo "$GITHUB_TOKEN" | helm registry login ghcr.io -u "$GH_ACTOR" --password-stdin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_ACTOR: ${{ github.actor }}
 
       - name: Package chart
         run: helm package charts/pdb-operator --destination .cr-release-packages
