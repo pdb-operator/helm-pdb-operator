@@ -90,6 +90,23 @@ tests:
               - update
               - watch
 
+  - it: should include statefulset access
+    template: clusterrole.yaml
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups:
+              - apps
+            resources:
+              - statefulsets
+            verbs:
+              - get
+              - list
+              - patch
+              - update
+              - watch
+
   # -------------------------------------------------------------------------
   # ClusterRoleBinding
   # -------------------------------------------------------------------------

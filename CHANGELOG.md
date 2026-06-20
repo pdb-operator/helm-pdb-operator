@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-20
+
+### Added
+
+- ClusterRole now grants `apps/statefulsets` (`get`, `list`, `watch`, `update`, `patch`) so the operator can manage PDBs for StatefulSets (pdb-operator v0.2.0 StatefulSet support)
+- RBAC unit test asserting the StatefulSet rule
+
+### Changed
+
+- Bumped `appVersion` to `v0.2.0` (operator image tag) and chart `version` to `0.2.0`
+
 ## [0.1.0] - 2026-03-02
 
 ### Added
@@ -23,5 +34,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub Actions workflows (lint-test, release, DCO, check-links, community)
 - CNCF governance files
 
-[Unreleased]: https://github.com/pdb-operator/helm-pdb-operator/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/pdb-operator/helm-pdb-operator/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/pdb-operator/helm-pdb-operator/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/pdb-operator/helm-pdb-operator/releases/tag/v0.1.0
