@@ -49,5 +49,5 @@ jobs:
           persist-credentials: false
       - uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2 # v5.0.0
       - name: Install helm-unittest plugin
-        run: helm plugin install --verify=false https://github.com/helm-unittest/helm-unittest.git
+        run: helm plugin install --verify=false --version v1.0.3 https://github.com/helm-unittest/helm-unittest.git
       - run: helm unittest charts/pdb-operator
