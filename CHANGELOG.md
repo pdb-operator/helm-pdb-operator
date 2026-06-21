@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Corrected the post-install `NOTES.txt` PDBPolicy example to use the real CRD fields (`availabilityClass` / `workloadSelector`) instead of the non-existent `targetReference` / `pdbSpec` / `selector`, so the printed snippet applies cleanly (#9)
+
 ## [0.2.2] - 2026-06-21
 
 ### Added
