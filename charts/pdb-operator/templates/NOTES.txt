@@ -28,11 +28,8 @@ Create a PDBPolicy to get started:
   metadata:
     name: my-pdb-policy
   spec:
-    targetReference:
-      kind: Deployment
-    pdbSpec:
-      minAvailable: "50%"
-    selector:
+    availabilityClass: standard
+    workloadSelector:
       matchLabels:
         app: my-app
   EOF
