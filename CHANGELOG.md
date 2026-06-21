@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Bumped chart `version` to `0.2.2`.
+- Bumped chart `version` to `0.2.2` and `appVersion` to `v0.2.2` (operator finalizers RBAC release).
 
 ## [0.2.1] - 2026-06-21
 
