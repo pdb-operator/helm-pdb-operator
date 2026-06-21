@@ -7,7 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-06-21
+
+### Added
+
+- ClusterRole now grants `apps/statefulsets/finalizers` (`get`, `patch`, `update`), completing the `blockOwnerDeletion` finalizers RBAC for StatefulSet-owned PDBs on clusters that enforce it (e.g. OpenShift). Complements the `deployments/finalizers` rule from 0.2.1.
+- RBAC unit test asserting the finalizers rules.
+
+### Changed
+
+- Bumped chart `version` to `0.2.2`.
+
 ## [0.2.1] - 2026-06-21
+
+### Added
+
+- ClusterRole grants `apps/deployments/finalizers` (`get`, `patch`, `update`), required to set `blockOwnerDeletion` on Deployment-owned PDB references on clusters that enforce it (e.g. OpenShift) (#6, thanks @nenioscio)
 
 ### Changed
 
@@ -40,7 +55,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub Actions workflows (lint-test, release, DCO, check-links, community)
 - CNCF governance files
 
-[Unreleased]: https://github.com/pdb-operator/helm-pdb-operator/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/pdb-operator/helm-pdb-operator/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/pdb-operator/helm-pdb-operator/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/pdb-operator/helm-pdb-operator/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/pdb-operator/helm-pdb-operator/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/pdb-operator/helm-pdb-operator/releases/tag/v0.1.0

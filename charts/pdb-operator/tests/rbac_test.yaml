@@ -107,6 +107,22 @@ tests:
               - update
               - watch
 
+  - it: should include deployments/statefulsets finalizers access for blockOwnerDeletion
+    template: clusterrole.yaml
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups:
+              - apps
+            resources:
+              - deployments/finalizers
+              - statefulsets/finalizers
+            verbs:
+              - get
+              - patch
+              - update
+
   # -------------------------------------------------------------------------
   # ClusterRoleBinding
   # -------------------------------------------------------------------------

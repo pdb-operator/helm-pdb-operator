@@ -51,6 +51,7 @@ rules:
       - apps
     resources:
       - deployments/finalizers
+      - statefulsets/finalizers
     verbs:
       - get
       - patch
