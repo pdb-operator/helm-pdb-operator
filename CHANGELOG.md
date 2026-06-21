@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-06-21
+
 ### Fixed
 
 - Corrected the post-install `NOTES.txt` PDBPolicy example to use the real CRD fields (`availabilityClass` / `workloadSelector`) instead of the non-existent `targetReference` / `pdbSpec` / `selector`, so the printed snippet applies cleanly (#9)
@@ -59,7 +61,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub Actions workflows (lint-test, release, DCO, check-links, community)
 - CNCF governance files
 
-[Unreleased]: https://github.com/pdb-operator/helm-pdb-operator/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/pdb-operator/helm-pdb-operator/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/pdb-operator/helm-pdb-operator/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/pdb-operator/helm-pdb-operator/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/pdb-operator/helm-pdb-operator/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/pdb-operator/helm-pdb-operator/compare/v0.1.0...v0.2.0
