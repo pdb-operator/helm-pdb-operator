@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-27
+
+### Changed
+
+- Track operator `v0.3.0` (`appVersion`): PDBPolicy maintenance windows are now evaluated (timezone, `daysOfWeek`, multiple and overnight windows), with proactive start-of-window requeue; plus the operator's `make deploy` webhook-enable fix, OpenTelemetry tracing fix, and state-tracker error propagation. See the [operator changelog](https://github.com/pdb-operator/pdb-operator/blob/main/CHANGELOG.md) for details.
+
 ## [0.2.3] - 2026-06-21
 
 ### Fixed

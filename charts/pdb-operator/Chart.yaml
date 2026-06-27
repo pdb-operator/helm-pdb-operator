@@ -2,8 +2,8 @@ apiVersion: v2
 name: pdb-operator
 description: Automated PodDisruptionBudget management for Kubernetes via PDBPolicy CRDs
 type: application
-version: 0.2.3
-appVersion: "v0.2.2"
+version: 0.3.0
+appVersion: "v0.3.0"
 kubeVersion: ">=1.26.0-0"
 home: https://pdboperator.io
 sources:
