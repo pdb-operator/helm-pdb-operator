@@ -142,20 +142,24 @@ spec:
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `crds.install` | Manage CRDs as Helm templates | `false` |
+| `crds.install` | Manage the PDBPolicy CRD as part of the release | `true` |
 | `crdRoles.enabled` | Create admin/editor/viewer ClusterRoles | `true` |
 
 For the full list of values, see [values.yaml](charts/pdb-operator/values.yaml).
 
 ## CRD Management
 
-By default, CRDs are placed in the `crds/` directory and installed only on first `helm install` (Helm does not upgrade CRDs automatically). To upgrade CRDs after a chart update:
+The PDBPolicy CRD is rendered as a normal template from `files/crd-pdbpolicy.yaml`, so Helm (and Flux) upgrade it on `helm upgrade` and remove it on `helm uninstall`. This is the default (`crds.install=true`).
+
+The chart deliberately has no `crds/` directory. Helm auto-installs that directory on every `helm install` and never upgrades it, which both strands CRD schema changes and collides with the template. See [UPGRADING.md](UPGRADING.md) if you installed v0.3.0 or earlier.
+
+To manage the CRD out of band instead (cluster admin, separate GitOps stage), set `crds.install=false` and apply it yourself:
 
 ```bash
-kubectl apply -f charts/pdb-operator/crds/
+kubectl apply -f charts/pdb-operator/files/crd-pdbpolicy.yaml
 ```
 
-Alternatively, set `crds.install=true` to manage CRDs as Helm templates. This allows Helm (and Flux) to upgrade and delete CRDs as part of the release lifecycle.
+> `helm uninstall` deletes the CRD when `crds.install=true`, and deleting a CRD deletes every PDBPolicy in the cluster. Set `crds.install=false` if that is not what you want.
 
 ## Flux CD
 

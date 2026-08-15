@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING:** `crds.install` now defaults to `true` and the PDBPolicy CRD moved from `crds/` to `files/crd-pdbpolicy.yaml`, so Helm upgrades the CRD schema on `helm upgrade`. Existing installs need a one-time ownership adoption, and `helm uninstall` now deletes the CRD (and with it every PDBPolicy). See [UPGRADING.md](UPGRADING.md)
+
+### Fixed
+
+- `crds.install=true` could never be used: the chart shipped the CRD in both `crds/` (which Helm auto-installs on every install) and `templates/`, so the release failed with `cannot be imported into the current release: invalid ownership metadata`
+- `networkPolicy.enabled=true` denied the kube-apiserver access to the admission webhook port, so with the default `webhooks.failurePolicy: Fail` every PDBPolicy admission request failed. The policy now also admits the webhook and health probe ports
+
 ## [0.4.0] - 2026-08-15
 
 ### Added
