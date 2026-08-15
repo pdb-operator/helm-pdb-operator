@@ -57,6 +57,24 @@ rules:
       - patch
       - update
   - apiGroups:
+      - leaderworkerset.x-k8s.io
+    resources:
+      - leaderworkersets
+    verbs:
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - leaderworkerset.x-k8s.io
+    resources:
+      - leaderworkersets/finalizers
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
       - availability.pdboperator.io
     resources:
       - pdbpolicies
