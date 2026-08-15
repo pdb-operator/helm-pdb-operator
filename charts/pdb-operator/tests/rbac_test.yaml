@@ -107,6 +107,38 @@ tests:
               - update
               - watch
 
+  - it: should include leaderworkerset access
+    template: clusterrole.yaml
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups:
+              - leaderworkerset.x-k8s.io
+            resources:
+              - leaderworkersets
+            verbs:
+              - get
+              - list
+              - patch
+              - update
+              - watch
+
+  - it: should include leaderworkersets finalizers access for blockOwnerDeletion
+    template: clusterrole.yaml
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups:
+              - leaderworkerset.x-k8s.io
+            resources:
+              - leaderworkersets/finalizers
+            verbs:
+              - get
+              - patch
+              - update
+
   - it: should include deployments/statefulsets finalizers access for blockOwnerDeletion
     template: clusterrole.yaml
     asserts:

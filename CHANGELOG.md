@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- ClusterRole rules for `leaderworkerset.x-k8s.io` (`leaderworkersets` + `leaderworkersets/finalizers`), required by the operator's group-aware PDB support for LeaderWorkerSet ([pdb-operator#82](https://github.com/pdb-operator/pdb-operator/pull/82)) (#17)
+
 ## [0.3.0] - 2026-06-27
 
 ### Changed
