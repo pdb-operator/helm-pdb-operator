@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Link check no longer fails the build on transient network errors: results are cached between runs and lychee is configured with explicit retries and `GET` (`lychee.toml`)
+
 ## [0.4.0] - 2026-08-15
 
 ### Added

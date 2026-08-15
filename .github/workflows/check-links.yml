@@ -2,20 +2,29 @@ name: Check Links
 on:
   push:
     branches: [main]
-    paths: ["**.md"]
+    paths: ["**.md", "lychee.toml", ".github/workflows/check-links.yml"]
   pull_request:
     branches: [main]
-    paths: ["**.md"]
+    paths: ["**.md", "lychee.toml", ".github/workflows/check-links.yml"]
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   check-links:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
         with:
           persist-credentials: false
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .lycheecache
+          key: lychee-${{ github.sha }}
+          restore-keys: lychee-
       - uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2
         with:
-          args: --verbose --no-progress --exclude localhost --exclude 'github\.com/.*/compare/' --exclude 'github\.com/.*/releases/tag/' '**/*.md'
+          args: --config lychee.toml '**/*.md'
           fail: true

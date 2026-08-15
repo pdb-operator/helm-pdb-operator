@@ -1,0 +1,20 @@
+no_progress = true
+verbose = "info"
+
+# skip re-checking links verified in the last day
+cache = true
+max_cache_age = "1d"
+cache_exclude_status = "400.."
+
+# CDNs reset connections on HEAD, so go straight to GET
+method = "get"
+timeout = 30
+max_retries = 6
+retry_wait_time = 4
+accept = ["100..=103", "200..=299", "429"]
+
+exclude = [
+  "^https?://localhost",
+  "github\\.com/.*/compare/",
+  "github\\.com/.*/releases/tag/",
+]
