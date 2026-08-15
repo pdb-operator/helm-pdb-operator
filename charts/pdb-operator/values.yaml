@@ -271,10 +271,10 @@ prometheusRule:
 
 # CRD installation
 crds:
-  # -- Install CRDs as part of the Helm release (managed by Helm lifecycle).
-  # When true, CRDs are created as regular templates and can be upgraded/deleted by Helm.
-  # When false, CRDs from the crds/ directory are only installed on first install (Helm default behavior).
-  install: false
+  # -- Install CRDs as part of the Helm release, so Helm upgrades the schema on
+  # `helm upgrade` and removes it on `helm uninstall`. Set to false to manage the
+  # CRD out of band (GitOps, cluster admin) and apply it yourself before install.
+  install: true
 
 # CRD user-facing roles
 crdRoles:

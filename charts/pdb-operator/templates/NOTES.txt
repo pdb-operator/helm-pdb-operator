@@ -35,12 +35,11 @@ Create a PDBPolicy to get started:
   EOF
 
 {{- if .Values.crds.install }}
-CRDs are managed as Helm templates (crds.install=true).
-They will be upgraded/deleted as part of the Helm release lifecycle.
+CRDs are managed by this release (crds.install=true, the default).
+They are upgraded on `helm upgrade` and removed on `helm uninstall`.
 {{- else }}
-NOTE: Helm does not upgrade CRDs automatically. To upgrade the CRD after a chart update:
+NOTE: crds.install=false, so this release does NOT manage the PDBPolicy CRD.
+Apply it yourself before the operator can reconcile anything:
 
-  kubectl apply -f charts/pdb-operator/crds/
-
-  Or set crds.install=true to manage CRDs as Helm templates.
+  kubectl apply -f charts/pdb-operator/files/crd-pdbpolicy.yaml
 {{- end }}

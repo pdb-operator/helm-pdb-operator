@@ -35,6 +35,41 @@ tests:
           path: spec.ingress[0].ports[0].port
           value: 8443
 
+  - it: should allow the apiserver to reach the webhook port
+    template: networkpolicy.yaml
+    set:
+      networkPolicy.enabled: true
+    asserts:
+      - equal:
+          path: spec.ingress[1].ports[0].port
+          value: 9443
+      - isNull:
+          path: spec.ingress[1].from
+
+  - it: should allow the kubelet to reach the health probe port
+    template: networkpolicy.yaml
+    set:
+      networkPolicy.enabled: true
+    asserts:
+      - equal:
+          path: spec.ingress[2].ports[0].port
+          value: 8081
+      - isNull:
+          path: spec.ingress[2].from
+
+  - it: should drop the webhook rule when webhooks are disabled
+    template: networkpolicy.yaml
+    set:
+      networkPolicy.enabled: true
+      webhooks.enabled: false
+    asserts:
+      - equal:
+          path: spec.ingress[1].ports[0].port
+          value: 8081
+      - lengthEqual:
+          path: spec.ingress
+          count: 2
+
   # -------------------------------------------------------------------------
   # ServiceMonitor
   # -------------------------------------------------------------------------
@@ -213,16 +248,16 @@ tests:
   # -------------------------------------------------------------------------
   # CRDs template
   # -------------------------------------------------------------------------
-  - it: should not render CRD template by default
+  - it: should not render CRD when crds.install is false
     template: crds.yaml
+    set:
+      crds.install: false
     asserts:
       - hasDocuments:
           count: 0
 
-  - it: should render CRD when crds.install is true
+  - it: should render CRD by default
     template: crds.yaml
-    set:
-      crds.install: true
     asserts:
       - hasDocuments:
           count: 1

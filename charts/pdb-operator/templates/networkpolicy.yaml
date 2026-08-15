@@ -19,4 +19,14 @@ spec:
       ports:
         - port: {{ .Values.metrics.service.port }}
           protocol: TCP
+    {{- if .Values.webhooks.enabled }}
+    # no selector: the apiserver is off the pod network and cannot be matched
+    - ports:
+        - port: {{ .Values.webhooks.targetPort }}
+          protocol: TCP
+    {{- end }}
+    # no selector: probes originate from the kubelet on the node
+    - ports:
+        - port: {{ .Values.healthProbe.port }}
+          protocol: TCP
 {{- end }}
