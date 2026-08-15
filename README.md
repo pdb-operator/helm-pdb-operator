@@ -44,6 +44,8 @@ helm install pdb-operator oci://ghcr.io/pdb-operator/charts/pdb-operator \
 kubectl get pods -n pdb-operator-system
 ```
 
+> Upgrading from 0.4.x or earlier? 0.5.0 changes how the PDBPolicy CRD is managed and needs a one-time step. See [UPGRADING.md](UPGRADING.md).
+
 Create a PDBPolicy:
 
 ```yaml
@@ -52,14 +54,13 @@ kind: PDBPolicy
 metadata:
   name: my-pdb-policy
 spec:
-  targetReference:
-    kind: Deployment
-  pdbSpec:
-    minAvailable: "50%"
-  selector:
+  availabilityClass: standard
+  workloadSelector:
     matchLabels:
       app: my-app
 ```
+
+`availabilityClass` is one of `non-critical`, `standard`, `high-availability`, `mission-critical`, or `custom`. Both `availabilityClass` and `workloadSelector` are required.
 
 ## Configuration
 
@@ -124,7 +125,7 @@ spec:
 | `metrics.secure` | Serve metrics over HTTPS | `true` |
 | `serviceMonitor.enabled` | Create ServiceMonitor | `false` |
 | `prometheusRule.enabled` | Create PrometheusRule with alerts | `false` |
-| `networkPolicy.enabled` | Create NetworkPolicy for metrics | `false` |
+| `networkPolicy.enabled` | Restrict metrics access via NetworkPolicy (webhook and probe ports stay reachable) | `false` |
 
 ### High Availability
 
@@ -188,6 +189,6 @@ To report a security vulnerability, please see [SECURITY.md](SECURITY.md).
 
 ## License
 
-Copyright 2025 The PDB Operator Authors.
+Copyright 2026 The PDB Operator Authors.
 
 Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.
