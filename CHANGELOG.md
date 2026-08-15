@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-08-15
+
 ### Changed
 
+- Track operator `v0.4.1` (`appVersion`): managed-workload gauges fix. See the [operator changelog](https://github.com/pdb-operator/pdb-operator/blob/main/CHANGELOG.md) for details.
 - **BREAKING:** `crds.install` now defaults to `true` and the PDBPolicy CRD moved from `crds/` to `files/crd-pdbpolicy.yaml`, so Helm upgrades the CRD schema on `helm upgrade`. Existing installs need a one-time ownership adoption, and `helm uninstall` now deletes the CRD (and with it every PDBPolicy). See [UPGRADING.md](UPGRADING.md)
 
 ### Fixed
