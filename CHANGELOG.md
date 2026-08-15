@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-08-15
+
 ### Added
 - ClusterRole rules for `leaderworkerset.x-k8s.io` (`leaderworkersets` + `leaderworkersets/finalizers`), required by the operator's group-aware PDB support for LeaderWorkerSet ([pdb-operator#82](https://github.com/pdb-operator/pdb-operator/pull/82)) (#17)
+
+### Changed
+- Track operator `v0.4.0` (`appVersion`): group-aware PDBs for LeaderWorkerSet (multi-host inference) and the Go 1.26.6 security bump. See the [operator changelog](https://github.com/pdb-operator/pdb-operator/blob/main/CHANGELOG.md) for details.
 
 ## [0.3.0] - 2026-06-27
 
