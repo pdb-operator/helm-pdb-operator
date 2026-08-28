@@ -139,6 +139,68 @@ tests:
               - patch
               - update
 
+  - it: should include pods read access for Workload API selector derivation
+    template: clusterrole.yaml
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups:
+              - ""
+            resources:
+              - pods
+            verbs:
+              - get
+              - list
+              - watch
+
+  - it: should include podgroups read access
+    template: clusterrole.yaml
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups:
+              - scheduling.k8s.io
+            resources:
+              - podgroups
+            verbs:
+              - get
+              - list
+              - watch
+
+  - it: should include workloads access
+    template: clusterrole.yaml
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups:
+              - scheduling.k8s.io
+            resources:
+              - workloads
+            verbs:
+              - get
+              - list
+              - patch
+              - update
+              - watch
+
+  - it: should include workloads finalizers access for blockOwnerDeletion
+    template: clusterrole.yaml
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups:
+              - scheduling.k8s.io
+            resources:
+              - workloads/finalizers
+            verbs:
+              - get
+              - patch
+              - update
+
   - it: should include deployments/statefulsets finalizers access for blockOwnerDeletion
     template: clusterrole.yaml
     asserts:

@@ -75,6 +75,40 @@ rules:
       - patch
       - update
   - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - scheduling.k8s.io
+    resources:
+      - podgroups
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - scheduling.k8s.io
+    resources:
+      - workloads
+    verbs:
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - scheduling.k8s.io
+    resources:
+      - workloads/finalizers
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
       - availability.pdboperator.io
     resources:
       - pdbpolicies

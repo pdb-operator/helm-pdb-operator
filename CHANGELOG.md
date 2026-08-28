@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- ClusterRole rules for the upstream Workload API needed by operator v0.5.0's gang-aware PDBs: read on core `pods` and `scheduling.k8s.io` `podgroups`, read/patch/update on `workloads`, and `workloads/finalizers` for `blockOwnerDeletion` (#24)
+
 ## [0.5.0] - 2026-08-15
 
 ### Changed
