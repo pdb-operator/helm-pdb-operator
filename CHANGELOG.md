@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-08-29
+
+### Changed
+
+- Track operator `v0.5.0` (`appVersion`): gang-aware PDBs from the upstream Workload API (`scheduling.k8s.io/v1beta1`, Kubernetes 1.37 with the `GenericWorkload` gate) and distinct event reasons per Workload skip cause. See the [operator changelog](https://github.com/pdb-operator/pdb-operator/blob/main/CHANGELOG.md) for details.
+
 ### Added
 
 - ClusterRole rules for the upstream Workload API needed by operator v0.5.0's gang-aware PDBs: read on core `pods` and `scheduling.k8s.io` `podgroups`, read/patch/update on `workloads`, and `workloads/finalizers` for `blockOwnerDeletion` (#24)
