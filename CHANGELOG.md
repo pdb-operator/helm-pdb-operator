@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-10-04
+
+### Changed
+
+- Track operator `v0.5.1` (`appVersion`): security dependency bumps for GO-2026-6505 (OpenTelemetry) and GO-2026-6348 (gRPC), plus Kubernetes libraries v0.37.1 and controller-runtime v0.25.2. See the [operator changelog](https://github.com/pdb-operator/pdb-operator/blob/main/CHANGELOG.md) for details.
+
 ## [0.6.0] - 2026-08-29
 
 ### Changed
