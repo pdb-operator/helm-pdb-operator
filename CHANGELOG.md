@@ -98,9 +98,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub Actions workflows (lint-test, release, DCO, check-links, community)
 - CNCF governance files
 
-[Unreleased]: https://github.com/pdb-operator/helm-pdb-operator/compare/v0.2.3...HEAD
+[Unreleased]: https://github.com/pdb-operator/helm-pdb-operator/compare/v0.6.1...HEAD
+[0.6.1]: https://github.com/pdb-operator/helm-pdb-operator/compare/v0.6.0...v0.6.1
+[0.6.0]: https://github.com/pdb-operator/helm-pdb-operator/compare/v0.5.0...v0.6.0
+[0.5.0]: https://github.com/pdb-operator/helm-pdb-operator/compare/v0.4.0...v0.5.0
+[0.4.0]: https://github.com/pdb-operator/helm-pdb-operator/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/pdb-operator/helm-pdb-operator/compare/v0.2.3...v0.3.0
 [0.2.3]: https://github.com/pdb-operator/helm-pdb-operator/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/pdb-operator/helm-pdb-operator/compare/v0.2.1...v0.2.2
-[0.2.1]: https://github.com/pdb-operator/helm-pdb-operator/compare/v0.2.0...v0.2.1
-[0.2.0]: https://github.com/pdb-operator/helm-pdb-operator/compare/v0.1.0...v0.2.0
+[0.2.1]: https://github.com/pdb-operator/helm-pdb-operator/compare/9742bda7c389fe4fb4c61f07a9c940f9bef58719...v0.2.1
+[0.2.0]: https://github.com/pdb-operator/helm-pdb-operator/compare/v0.1.0...9742bda7c389fe4fb4c61f07a9c940f9bef58719
 [0.1.0]: https://github.com/pdb-operator/helm-pdb-operator/releases/tag/v0.1.0
